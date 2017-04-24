@@ -1,0 +1,12 @@
+dist
+cabal-dev
+.shake.database
+out
+.DS_Store
+.cabal-sandbox
+cabal.sandbox.config
+.stack-work
+/dist-newstyle/
+*~
+cabal.project.local
+*.dwo
