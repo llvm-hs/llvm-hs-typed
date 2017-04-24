@@ -25,6 +25,7 @@ tested-with: GHC == 7.8.4, GHC == 7.10.3, GHC == 8.0.2
 
 library
   exposed-modules:
+   LLVM.AST.TypeLevel.Type
    LLVM.AST.Tagged
    LLVM.AST.Tagged.Instruction
    LLVM.AST.Tagged.Name
