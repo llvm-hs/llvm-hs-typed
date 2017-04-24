@@ -3,7 +3,6 @@
 {-# LANGUAGE ExplicitForAll #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE TypeFamilyDependencies #-}
 {-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE TypeApplications #-}
@@ -38,6 +37,7 @@ data Name' = Name' Symbol | UnName' Nat
 
 data AddrSpace' = AddrSpace' Nat
 
+-- | A copy of 'Type', suitable to be used on the type level
 data Type'
   = VoidType'
   | IntegerType' Nat
@@ -51,9 +51,9 @@ data Type'
   | MetadataType'
   | TokenType'
 
--- TODO: Can we have one (kind) class to subsume the following repetition?
-
 type family Value k :: *
+-- | This class connects type variables (of kind @k@) to their value-level
+-- representation (of type 'Value k').
 class Known (t :: k)  where
     val :: Value k
 
