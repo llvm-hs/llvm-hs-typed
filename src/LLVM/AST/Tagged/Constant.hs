@@ -36,7 +36,9 @@ float someFloat = assertLLVMType $ Float someFloat
 null :: forall as t. Known t => Constant ::: PointerType' t as
 null = assertLLVMType $ Null (val @_ @t)
 
--- TODO: struct (needs a heterogenous list)
+struct :: forall b ts. Known b =>
+    Maybe Name -> Constant :::* ts -> Constant ::: (StructureType' b ts)
+struct mbName xs = assertLLVMType $ Struct mbName (val @_ @b) (unTypeds xs)
 
 -- TODO: Fix the number of elements
 array :: forall n t. Known t => [Constant ::: t] -> Constant ::: (ArrayType' n t)

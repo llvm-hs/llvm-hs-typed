@@ -1,6 +1,7 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE GADTs #-}
 
 module LLVM.AST.Tagged.Tag where
 
@@ -21,3 +22,14 @@ assertLLVMType = Typed
 -- | Removes the LLVM type annotation.
 unTyped :: v ::: t -> v
 unTyped (Typed v) = v
+
+-- TODO: Can we have a nicer name here
+
+-- | A list of tagged values
+data v :::* (ts :: [Type']) where
+    Nil    ::                         v :::* '[]
+    (:*)   :: v ::: t -> v :::* ts -> v :::* (t:ts)
+
+unTypeds :: v :::* ts -> [v]
+unTypeds Nil = []
+unTypeds (x :* xs) = unTyped x : unTypeds xs
