@@ -27,6 +27,7 @@ library
   exposed-modules:
    LLVM.AST.TypeLevel.Type
    LLVM.AST.Tagged
+   LLVM.AST.Tagged.Tag
    LLVM.AST.Tagged.Instruction
    LLVM.AST.Tagged.Name
    LLVM.AST.Tagged.Visibility
