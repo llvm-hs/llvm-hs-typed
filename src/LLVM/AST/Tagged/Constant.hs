@@ -16,6 +16,7 @@
 module LLVM.AST.Tagged.Constant where
 
 import Data.Word
+import GHC.TypeLits
 
 import LLVM.AST.TypeLevel.Type
 import LLVM.AST.Tagged.Tag
@@ -169,18 +170,15 @@ getElementPtr :: forall t as t2.
     Constant ::: t2
 getElementPtr in_bounds address indices = assertLLVMType $ GetElementPtr in_bounds (unTyped address) indices
 
--- TODO: Can we ensure that width2 <= width1
-trunc :: forall width1 width2. Known width2 =>
+trunc :: forall width1 width2. (Known width2, width2 <= width1) =>
     Constant ::: IntegerType' width1 -> Constant ::: IntegerType' width2
 trunc o1 = assertLLVMType $ Trunc (unTyped o1) (val @_ @(IntegerType' width2))
 
--- TODO: Can we ensure that width2 >= width1
-zext :: forall width1 width2. Known width2 =>
+zext :: forall width1 width2. (Known width2, width1 <= width2) =>
     Constant ::: IntegerType' width1 -> Constant ::: IntegerType' width2
 zext o1 = assertLLVMType $ ZExt (unTyped o1) (val @_ @(IntegerType' width2))
 
--- TODO: Can we ensure that width2 >= width1
-sext :: forall width1 width2. Known width2 =>
+sext :: forall width1 width2. (Known width2, width1 <= width2) =>
     Constant ::: IntegerType' width1 -> Constant ::: IntegerType' width2
 sext o1 = assertLLVMType $ SExt (unTyped o1) (val @_ @(IntegerType' width2))
 
@@ -205,16 +203,14 @@ sitofp :: forall width1 width2 fpf. (Known width2, Known fpf) =>
 sitofp o1 = assertLLVMType $ SIToFP (unTyped o1) (val @_ @(FloatingPointType' width2 fpf))
 
 
--- TODO: Can we ensure that width2 <= width1
 -- TODO: Are the FloatingPointFormats going to be the same?
-fptrunc :: forall width1 width2 fpf1 fpf2. (Known width2, Known fpf2)=>
+fptrunc :: forall width1 width2 fpf1 fpf2. (Known width2, Known fpf2, width2 <= width1)=>
     Constant ::: FloatingPointType' width1 fpf1 ->
     Constant ::: FloatingPointType' width2 fpf2
 fptrunc o1 = assertLLVMType $ FPTrunc (unTyped o1) (val @_ @(FloatingPointType' width2 fpf2))
 
--- TODO: Can we ensure that width2 >= width1
 -- TODO: Are the FloatingPointFormats going to be the same?
-fpext :: forall width1 width2 fpf1 fpf2. (Known width2, Known fpf2)=>
+fpext :: forall width1 width2 fpf1 fpf2. (Known width2, Known fpf2, width1 <= width2)=>
     Constant ::: FloatingPointType' width1 fpf1 ->
     Constant ::: FloatingPointType' width2 fpf2
 fpext o1 = assertLLVMType $ FPExt (unTyped o1) (val @_ @(FloatingPointType' width2 fpf2))
