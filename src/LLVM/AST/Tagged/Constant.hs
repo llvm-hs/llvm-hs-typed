@@ -40,13 +40,13 @@ struct :: forall b ts. Known b =>
     Maybe Name -> Constant :::* ts -> Constant ::: (StructureType' b ts)
 struct mbName xs = assertLLVMType $ Struct mbName (val @_ @b) (unTypeds xs)
 
--- TODO: Fix the number of elements
-array :: forall n t. Known t => [Constant ::: t] -> Constant ::: (ArrayType' n t)
-array vals = assertLLVMType $ Array (val @_ @t) (map unTyped vals)
+array :: forall n t. Known t =>
+    n × (Constant ::: t) -> Constant ::: (ArrayType' n t)
+array vals = assertLLVMType $ Array (val @_ @t) (map unTyped (unCounted vals))
 
--- TODO: Fix the number of elements
-vector :: forall n t. Known t => [Constant ::: t] -> Constant ::: (VectorType' n t)
-vector vals = assertLLVMType $ Vector (map unTyped vals)
+vector :: forall n t. Known t =>
+    n × (Constant ::: t) -> Constant ::: (VectorType' n t)
+vector vals = assertLLVMType $ Vector (map unTyped (unCounted vals))
 
 undef :: forall t. Known t => Constant ::: t
 undef = assertLLVMType $ Undef (val @_ @t)

@@ -5,6 +5,8 @@
 
 module LLVM.AST.Tagged.Tag where
 
+import GHC.TypeLits
+
 import LLVM.AST.TypeLevel.Type
 
 -- | A value of type @v ::: t@ denotes a value of type @v@ with an LLVM type
@@ -29,7 +31,19 @@ unTyped (Typed v) = v
 data v :::* (ts :: [Type']) where
     Nil    ::                         v :::* '[]
     (:*)   :: v ::: t -> v :::* ts -> v :::* (t:ts)
+infixr 5 :*
 
 unTypeds :: v :::* ts -> [v]
 unTypeds Nil = []
 unTypeds (x :* xs) = unTyped x : unTypeds xs
+
+-- | A vector type
+data (n::Nat) × a where
+    VNil   ::               0 × a
+    (:×)   :: a -> n × a -> (1 + n) × a
+infixr 5 :×
+
+
+unCounted :: n × a -> [a]
+unCounted VNil = []
+unCounted (x :× xs) = x : unCounted xs
