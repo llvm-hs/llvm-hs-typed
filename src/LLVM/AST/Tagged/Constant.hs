@@ -29,8 +29,8 @@ import LLVM.AST.FloatingPointPredicate (FloatingPointPredicate)
 int :: forall width. Known width => Integer -> Constant ::: IntegerType' width
 int value = assertLLVMType $ Int (word32Val @width) value
 
--- TODO: Tie the width to the width of the SomeFloat
-float :: forall width fpf. SomeFloat -> Constant ::: FloatingPointType' width fpf
+-- TODO: Tie the format to the format of the SomeFloat
+float :: forall fpt. SomeFloat -> Constant ::: FloatingPointType' fpt
 float someFloat = assertLLVMType $ Float someFloat
 
 null :: forall as t. Known t => Constant ::: PointerType' t as
@@ -65,9 +65,9 @@ add :: forall width.
     Constant ::: IntegerType' width
 add nsw nuw o1 o2 = assertLLVMType $ Add nsw nuw (unTyped o1) (unTyped o2)
 
-fadd :: forall width fpf.
-    Constant ::: (FloatingPointType' width fpf) -> Constant ::: (FloatingPointType' width fpf) ->
-    Constant ::: (FloatingPointType' width fpf)
+fadd :: forall fpt.
+    Constant ::: (FloatingPointType' fpt) -> Constant ::: (FloatingPointType' fpt) ->
+    Constant ::: (FloatingPointType' fpt)
 fadd o1 o2 = assertLLVMType $ FAdd (unTyped o1) (unTyped o2)
 
 sub :: forall width.
@@ -77,9 +77,9 @@ sub :: forall width.
 sub nsw nuw o1 o2 = assertLLVMType $ Sub nsw nuw (unTyped o1) (unTyped o2)
 
 
-fsub :: forall width fpf.
-    Constant ::: (FloatingPointType' width fpf) -> Constant ::: (FloatingPointType' width fpf) ->
-    Constant ::: (FloatingPointType' width fpf)
+fsub :: forall fpt.
+    Constant ::: (FloatingPointType' fpt) -> Constant ::: (FloatingPointType' fpt) ->
+    Constant ::: (FloatingPointType' fpt)
 fsub o1 o2 = assertLLVMType $ FSub (unTyped o1) (unTyped o2)
 
 
@@ -89,9 +89,9 @@ mul :: forall width.
     Constant ::: IntegerType' width
 mul nsw nuw o1 o2 = assertLLVMType $ Mul nsw nuw (unTyped o1) (unTyped o2)
 
-fmul :: forall width fpf.
-    Constant ::: (FloatingPointType' width fpf) -> Constant ::: (FloatingPointType' width fpf) ->
-    Constant ::: (FloatingPointType' width fpf)
+fmul :: forall fpt.
+    Constant ::: (FloatingPointType' fpt) -> Constant ::: (FloatingPointType' fpt) ->
+    Constant ::: (FloatingPointType' fpt)
 fmul o1 o2 = assertLLVMType $ FMul (unTyped o1) (unTyped o2)
 
 
@@ -107,9 +107,9 @@ sdiv :: forall width.
     Constant ::: IntegerType' width
 sdiv exact o1 o2 = assertLLVMType $ SDiv exact (unTyped o1) (unTyped o2)
 
-fdiv :: forall width fpf.
-    Constant ::: (FloatingPointType' width fpf) -> Constant ::: (FloatingPointType' width fpf) ->
-    Constant ::: (FloatingPointType' width fpf)
+fdiv :: forall fpt.
+    Constant ::: (FloatingPointType' fpt) -> Constant ::: (FloatingPointType' fpt) ->
+    Constant ::: (FloatingPointType' fpt)
 fdiv o1 o2 = assertLLVMType $ FDiv (unTyped o1) (unTyped o2)
 
 
@@ -125,9 +125,9 @@ srem :: forall width.
     Constant ::: IntegerType' width
 srem exact o1 o2 = assertLLVMType $ SDiv exact (unTyped o1) (unTyped o2)
 
-frem :: forall width fpf.
-    Constant ::: (FloatingPointType' width fpf) -> Constant ::: (FloatingPointType' width fpf) ->
-    Constant ::: (FloatingPointType' width fpf)
+frem :: forall fpt.
+    Constant ::: (FloatingPointType' fpt) -> Constant ::: (FloatingPointType' fpt) ->
+    Constant ::: (FloatingPointType' fpt)
 frem o1 o2 = assertLLVMType $ FDiv (unTyped o1) (unTyped o2)
 
 
@@ -184,38 +184,36 @@ sext :: forall width1 width2. (Known width2, width1 <= width2) =>
     Constant ::: IntegerType' width1 -> Constant ::: IntegerType' width2
 sext o1 = assertLLVMType $ SExt (unTyped o1) (val @_ @(IntegerType' width2))
 
-fptoui :: forall width1 width2 fpf. Known width2 =>
-    Constant ::: FloatingPointType' width1 fpf ->
-    Constant ::: IntegerType' width2
-fptoui o1 = assertLLVMType $ FPToUI (unTyped o1) (val @_ @(IntegerType' width2))
+fptoui :: forall fpt width. Known width =>
+    Constant ::: FloatingPointType' fpt ->
+    Constant ::: IntegerType' width
+fptoui o1 = assertLLVMType $ FPToUI (unTyped o1) (val @_ @(IntegerType' width))
 
-fptosi :: forall width1 width2 fpf. Known width2 =>
-    Constant ::: FloatingPointType' width1 fpf ->
-    Constant ::: IntegerType' width2
-fptosi o1 = assertLLVMType $ FPToSI (unTyped o1) (val @_ @(IntegerType' width2))
+fptosi :: forall fpt width. Known width =>
+    Constant ::: FloatingPointType' fpt ->
+    Constant ::: IntegerType' width
+fptosi o1 = assertLLVMType $ FPToSI (unTyped o1) (val @_ @(IntegerType' width))
 
-uitofp :: forall width1 width2 fpf. (Known width2, Known fpf) =>
-    Constant ::: IntegerType' width1 ->
-    Constant ::: FloatingPointType' width2 fpf
-uitofp o1 = assertLLVMType $ UIToFP (unTyped o1) (val @_ @(FloatingPointType' width2 fpf))
+uitofp :: forall width fpt. Known fpt =>
+    Constant ::: IntegerType' width ->
+    Constant ::: FloatingPointType' fpt
+uitofp o1 = assertLLVMType $ UIToFP (unTyped o1) (val @_ @(FloatingPointType' fpt))
 
-sitofp :: forall width1 width2 fpf. (Known width2, Known fpf) =>
-    Constant ::: IntegerType' width1 ->
-    Constant ::: FloatingPointType' width2 fpf
-sitofp o1 = assertLLVMType $ SIToFP (unTyped o1) (val @_ @(FloatingPointType' width2 fpf))
+sitofp :: forall width fpt. Known fpt =>
+    Constant ::: IntegerType' width ->
+    Constant ::: FloatingPointType' fpt
+sitofp o1 = assertLLVMType $ SIToFP (unTyped o1) (val @_ @(FloatingPointType' fpt))
 
 
--- TODO: Are the FloatingPointFormats going to be the same?
-fptrunc :: forall width1 width2 fpf1 fpf2. (Known width2, Known fpf2, width2 <= width1)=>
-    Constant ::: FloatingPointType' width1 fpf1 ->
-    Constant ::: FloatingPointType' width2 fpf2
-fptrunc o1 = assertLLVMType $ FPTrunc (unTyped o1) (val @_ @(FloatingPointType' width2 fpf2))
+fptrunc :: forall fpt1 fpt2. Known fpt2=>
+    Constant ::: FloatingPointType' fpt1 ->
+    Constant ::: FloatingPointType' fpt2
+fptrunc o1 = assertLLVMType $ FPTrunc (unTyped o1) (val @_ @(FloatingPointType' fpt2))
 
--- TODO: Are the FloatingPointFormats going to be the same?
-fpext :: forall width1 width2 fpf1 fpf2. (Known width2, Known fpf2, width1 <= width2)=>
-    Constant ::: FloatingPointType' width1 fpf1 ->
-    Constant ::: FloatingPointType' width2 fpf2
-fpext o1 = assertLLVMType $ FPExt (unTyped o1) (val @_ @(FloatingPointType' width2 fpf2))
+fpext :: forall fpt1 fpt2. Known fpt2 =>
+    Constant ::: FloatingPointType' fpt1 ->
+    Constant ::: FloatingPointType' fpt2
+fpext o1 = assertLLVMType $ FPExt (unTyped o1) (val @_ @(FloatingPointType' fpt2))
 
 ptrtoint :: forall as t width. Known width =>
     Constant ::: PointerType' t as ->

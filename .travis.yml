@@ -44,7 +44,8 @@ install:
  - travis_retry cabal update -v
  - sed -i 's/^jobs:/-- jobs:/' ${HOME}/.cabal/config
  - rm -fv cabal.project.local
- - "echo 'packages: .' > cabal.project"
+ - git clone https://github.com/llvm-hs/llvm-hs
+ - 'echo "packages: . $TRAVIS_BUILD_DIR/llvm-hs/llvm-hs-pure/" > cabal.project'
  - rm -f cabal.project.freeze
  - cabal new-build -w ${HC} ${TEST} ${BENCH} --dep -j2 all
  - cabal new-build -w ${HC} --disable-tests --disable-benchmarks --dep -j2 all
@@ -62,7 +63,7 @@ script:
  - cd "$SRC_BASENAME/"
 ## from here on, CWD is inside the extracted source-tarball
  - rm -fv cabal.project.local
- - "echo 'packages: .' > cabal.project"
+ - 'echo "packages: . $TRAVIS_BUILD_DIR/llvm-hs/llvm-hs-pure/" > cabal.project'
  # this builds all libraries and executables (without tests/benchmarks)
  - rm -f cabal.project.freeze
  - cabal new-build -w ${HC} --disable-tests --disable-benchmarks all

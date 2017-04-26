@@ -28,6 +28,8 @@ module LLVM.AST.TypeLevel.Type where
 
 import Data.Word
 import GHC.TypeLits
+import Data.String.Encode
+import qualified Data.ByteString.Short as BS
 
 import LLVM.AST.Type
 import LLVM.AST.AddrSpace
@@ -42,7 +44,7 @@ data Type'
   = VoidType'
   | IntegerType' Nat
   | PointerType' Type' AddrSpace'
-  | FloatingPointType' Nat FloatingPointFormat
+  | FloatingPointType' FloatingPointType
   | FunctionType' Type' [Type'] Bool
   | VectorType' Nat Type'
   | StructureType' Bool [Type']
@@ -61,7 +63,7 @@ type instance Value Type' = Type
 type instance Value [a] = [Value a]
 type instance Value AddrSpace' = AddrSpace
 type instance Value Name' = Name
-type instance Value FloatingPointFormat = FloatingPointFormat
+type instance Value FloatingPointType = FloatingPointType
 type instance Value Bool = Bool
 type instance Value Symbol = String
 type instance Value Nat = Integer
@@ -75,14 +77,17 @@ word64Val = fromIntegral (val @_ @n)
 wordVal :: forall (n::Nat). Known n => Word
 wordVal = fromIntegral (val @_ @n)
 
+byteStringVal :: forall (s::Symbol). Known s => BS.ShortByteString
+byteStringVal = convertString (val @_ @s)
+
 instance Known VoidType' where
     val = VoidType
 instance Known n => Known (IntegerType' n) where
     val = IntegerType (word32Val @n)
 instance (Known t, Known as) => Known (PointerType' t as) where
     val = PointerType (val @_ @t) (val @_ @as)
-instance (Known n, Known fpf) => Known (FloatingPointType' n fpf) where
-    val = FloatingPointType (word32Val @n) (val @_ @fpf)
+instance Known fpt => Known (FloatingPointType' fpt) where
+    val = FloatingPointType (val @_ @fpt)
 instance (Known t, Known ts, Known b) => Known (FunctionType' t ts b) where
     val = FunctionType (val @_ @t) (val @_ @ts) (val @_ @b)
 instance (Known n, Known t) => Known (VectorType' n t) where
@@ -107,21 +112,19 @@ instance Known n => Known ('AddrSpace' n) where
     val = AddrSpace (word32Val @n)
 
 instance Known s => Known ('Name' s) where
-    val = Name (val @_ @s)
+    val = Name (byteStringVal @s)
 instance Known n => Known (UnName' n) where
     val = UnName (wordVal @n)
 
-instance Known IEEE where
-    val = IEEE
-instance Known DoubleExtended where
-    val = DoubleExtended
-instance Known PairOfFloats where
-    val = PairOfFloats
+instance Known HalfFP      where val = HalfFP
+instance Known FloatFP     where val = FloatFP
+instance Known DoubleFP    where val = DoubleFP
+instance Known FP128FP     where val = FP128FP
+instance Known X86_FP80FP  where val = X86_FP80FP
+instance Known PPC_FP128FP where val = PPC_FP128FP
 
-instance Known True where
-    val = True
-instance Known False where
-    val = False
+instance Known True        where val = True
+instance Known False       where val = False
 
 instance KnownNat n => Known (n :: Nat) where
     val = natVal @n undefined
