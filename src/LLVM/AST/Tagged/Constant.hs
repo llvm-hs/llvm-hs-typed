@@ -190,10 +190,11 @@ type family GEP_Res (t :: Type') (as :: [Maybe nat]) :: Type' where
 
 getGEPArgs :: forall static_args. GEP_Args static_args -> [Constant]
 getGEPArgs None = []
-getGEPArgs (AKnown as) = Int (word32Val @32) i : getGEPArgs as
-  where i = val @_ @(FromMaybe (Head static_args))
-    -- ^ Can I avoid the FromMaybe (Head args) dance above, and simply bind
-    --   the n in "AKnown @n as"?
+getGEPArgs (AKnown as) =
+    let i :: forall n xs . (Just n : xs) ~ static_args => Integer
+            -- this extracts the n from the static args
+        i = val @_ @n
+    in Int (word32Val @32) i : getGEPArgs as
 getGEPArgs (AUnknown v as) = unTyped v : getGEPArgs as
 
 getElementPtr :: forall t as static_args t2.
