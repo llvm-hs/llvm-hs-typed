@@ -22,6 +22,8 @@ module LLVM.AST.Tagged.Global (
   function,
 ) where
 
+import Data.Coerce
+
 import LLVM.AST.Name
 import LLVM.AST.Global as AST
 import qualified LLVM.AST.Attribute as A
@@ -39,21 +41,25 @@ basicBlock
   -> BasicBlock
 basicBlock = BasicBlock
 
-parameter 
-  :: forall t. Known t 
+parameter
+  :: forall t. Known t
   => (Name ::: t)
   -> [A.ParameterAttribute]
-  -> (Parameter :::: t)
-parameter nm attrs = assertLLVMType $ Parameter (val @_ @t) (unTyped nm) attrs
+  -> (Parameter ::: t)
+parameter nm attrs = coerce Parameter (val @_ @t) nm attrs
 
-function 
-  :: forall t. Known t 
-  => (Name ::: t)
-  -> Type'
-  -> ([Parameter :::: t], Bool)
+-- | This creates a 'Global' from typed parameters. It is equal to
+-- 'functionDefaults' with the fields 'AST.name', 'AST.returnType' and
+-- 'AST.parameters' set.
+--
+-- It does not support varargs.
+function
+  :: forall ret_ty args_tys as. Known ret_ty
+  => (Name ::: PointerType' (FunctionType' ret_ty args_tys False) as)
+  -> (Parameter :::*  args_tys, Bool)
   -> Global
-function nm retty (params,variadic) = functionDefaults
-  { AST.name = unTyped nm
-  , AST.returnType = (val @_ @t)
-  , AST.parameters = (fmap unTyped params, variadic)
+function nm (params,variadic) = functionDefaults
+  { AST.name = coerce nm
+  , AST.returnType = (val @_ @ret_ty)
+  , AST.parameters = (coerce params, variadic)
   }
