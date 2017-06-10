@@ -34,9 +34,9 @@ unTyped (Typed v) = v
 -- TODO: Can we have a nicer name here
 
 -- | A list of tagged values
-data v :::* (ts :: [Type']) where
-    Nil    ::                         v :::* '[]
-    (:*)   :: v ::: t -> v :::* ts -> v :::* (t:ts)
+data v :::* (ts :: [k']) where
+    Nil    ::                          v :::* '[]
+    (:*)   :: v :::: t -> v :::* ts -> v :::* (t:ts)
 infixr 5 :*
 
 unTypeds :: v :::* ts -> [v]

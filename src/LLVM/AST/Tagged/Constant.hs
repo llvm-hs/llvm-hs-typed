@@ -10,6 +10,8 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 -- | This module provides a type-safe variant of "LLVM.AST.Constant".
 -- It is currently a stub
@@ -19,6 +21,7 @@ import Data.Word
 import GHC.TypeLits
 
 import LLVM.AST.TypeLevel.Type
+import LLVM.AST.TypeLevel.Utils
 import LLVM.AST.Tagged.Tag
 import LLVM.AST.Constant
 import LLVM.AST.Name (Name)
@@ -163,13 +166,43 @@ xor :: forall width.
     Constant ::: IntegerType' width
 xor o1 o2 = assertLLVMType $ Xor (unTyped o1) (unTyped o2)
 
--- TODO: Use type system machinery to fix t2, and to say something about the types of indices
-getElementPtr :: forall t as t2.
+-- A list of arguments to @getElementPtr@ which, on the type level,
+-- tracks which arguments are statically known.
+data GEP_Args (static_args :: [Maybe Nat])  where
+    None     :: GEP_Args '[]
+    -- | Statically known index. Only this is allowed to index into a structure
+    AKnown   :: forall n xs. KnownNat n =>
+        GEP_Args xs ->
+        GEP_Args (Just n : xs)
+    -- | Dynamically known index.
+    AUnknown :: forall width xs.
+        Constant ::: IntegerType' width ->
+        GEP_Args xs ->
+        GEP_Args (Nothing : xs)
+
+-- | This type family calculates the return type of a 'getElementPtr' instruction.
+type family GEP_Res (t :: Type') (as :: [Maybe nat]) :: Type' where
+    GEP_Res t '[] = t
+    GEP_Res (StructureType' _ ts) (Just n : as) = GEP_Res (Nth ts n) as
+    GEP_Res (PointerType' t2 _)   (_ : as) = GEP_Res t2 as
+    GEP_Res (ArrayType' _ t2)     (_ : as) = GEP_Res t2 as
+
+
+getGEPArgs :: forall static_args. GEP_Args static_args -> [Constant]
+getGEPArgs None = []
+getGEPArgs (AKnown as) = Int (word32Val @32) i : getGEPArgs as
+  where i = val @_ @(FromMaybe (Head static_args))
+    -- ^ Can I avoid the FromMaybe (Head args) dance above, and simply bind
+    --   the n in "AKnown @n as"?
+getGEPArgs (AUnknown v as) = unTyped v : getGEPArgs as
+
+getElementPtr :: forall t as static_args t2.
     Bool ->
-    Constant ::: (PointerType' t as) ->
-    [Constant] ->
-    Constant ::: t2
-getElementPtr in_bounds address indices = assertLLVMType $ GetElementPtr in_bounds (unTyped address) indices
+    Constant ::: PointerType' t as ->
+    GEP_Args static_args ->
+    Constant ::: GEP_Res (PointerType' t as) static_args
+getElementPtr in_bounds address indices
+    = assertLLVMType $ GetElementPtr in_bounds (unTyped address) (getGEPArgs indices)
 
 trunc :: forall width1 width2. (Known width2, width2 <= width1) =>
     Constant ::: IntegerType' width1 -> Constant ::: IntegerType' width2
