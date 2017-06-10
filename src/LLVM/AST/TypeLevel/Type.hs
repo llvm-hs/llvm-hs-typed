@@ -9,6 +9,7 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 {- |
 This modules contains a variant of the 'LLVM.AST.Type.Type' type, suitable for
@@ -28,6 +29,7 @@ module LLVM.AST.TypeLevel.Type where
 
 import Data.Word
 import GHC.TypeLits
+import GHC.Exts (Constraint)
 import Data.String.Encode
 import qualified Data.ByteString.Short as BS
 
@@ -58,6 +60,10 @@ type family Value k :: *
 -- representation (of type 'Value k').
 class Known (t :: k)  where
     val :: Value k
+
+type family NonVoid (t :: Type') :: Constraint where
+    NonVoid VoidType' = TypeError (Text "Type must not be void")
+    NonVoid t         = ()
 
 type instance Value Type' = Type
 type instance Value [a] = [Value a]
