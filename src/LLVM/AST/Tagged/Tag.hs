@@ -2,6 +2,7 @@
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE PolyKinds #-}
 
 module LLVM.AST.Tagged.Tag where
 
@@ -15,14 +16,19 @@ import LLVM.AST.TypeLevel.Type
 -- This anntation exists only on the Haskell type level. Functions that need to
 -- get hold of the actual 'LLVM.Ast.Type.Type' associated to the tag will
 -- typically have a 'Known' type class constraint.
-newtype v ::: (t :: Type') = Typed v
+type v ::: (t :: Type') = v :::: t
+
+-- | Sometimes we want to annotate a value @v@ with something else than an LLVM
+-- type (@Type'@), so this allows any kind
+newtype v :::: (t :: k) = Typed v
+
 
 -- | Adds an LLVM type annotation to its argument. Note that this function is unchecked.
-assertLLVMType :: v -> v ::: t
+assertLLVMType :: v -> v :::: t
 assertLLVMType = Typed
 
 -- | Removes the LLVM type annotation.
-unTyped :: v ::: t -> v
+unTyped :: v :::: t -> v
 unTyped (Typed v) = v
 
 -- TODO: Can we have a nicer name here

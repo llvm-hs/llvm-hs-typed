@@ -29,9 +29,8 @@ import LLVM.AST.FloatingPointPredicate (FloatingPointPredicate)
 int :: forall width. Known width => Integer -> Constant ::: IntegerType' width
 int value = assertLLVMType $ Int (word32Val @width) value
 
--- TODO: Tie the format to the format of the SomeFloat
-float :: forall fpt. SomeFloat -> Constant ::: FloatingPointType' fpt
-float someFloat = assertLLVMType $ Float someFloat
+float :: forall fpt. SomeFloat :::: fpt -> Constant ::: FloatingPointType' fpt
+float someFloat = assertLLVMType $ Float (unTyped someFloat)
 
 null :: forall as t. Known t => Constant ::: PointerType' t as
 null = assertLLVMType $ Null (val @_ @t)
