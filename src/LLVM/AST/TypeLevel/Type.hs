@@ -55,15 +55,43 @@ data Type'
   | MetadataType'
   | TokenType'
 
+-- | Ensures a type is not void
+type family NonVoid (t :: Type') :: Constraint where
+    NonVoid VoidType' = TypeError (Text "Type must not be void")
+    NonVoid t         = ()
+
+-- | A non-aggregate, non-vector type. Basically, everything that can
+-- be bitcaste’d into each other.
+type family NonAggregate (t :: Type') :: Constraint where
+    NonAggregate (IntegerType' _)       = ()
+    NonAggregate (FloatingPointType' _) = ()
+    NonAggregate (VectorType' _ _ )     = ()
+    NonAggregate t = TypeError (ShowType t :<>: Text " is aggregate")
+
+-- | Bit widths of the given floating point type
+type family BitSizeOfFP (t :: FloatingPointType) :: Nat where
+    BitSizeOfFP HalfFP      = 16
+    BitSizeOfFP FloatFP     = 32
+    BitSizeOfFP DoubleFP    = 64
+    BitSizeOfFP FP128FP     = 128
+    BitSizeOfFP X86_FP80FP  = 80
+    BitSizeOfFP PPC_FP128FP = 128
+
+-- | Bit widths of this nonaggregate type
+type family BitSizeOf (t :: Type') :: Nat where
+    BitSizeOf (IntegerType' w)         = w
+    BitSizeOf (FloatingPointType' fpf) = BitSizeOfFP fpf
+    BitSizeOf (VectorType' n t)        = n * BitSizeOf t
+    BitSizeOf t = TypeError (ShowType t :<>: Text " is aggregate")
+
+-- | This type family indicates the value-level representation of a type-level
+-- type. Often these are the same.
 type family Value k :: *
+
 -- | This class connects type variables (of kind @k@) to their value-level
 -- representation (of type 'Value k').
 class Known (t :: k)  where
     val :: Value k
-
-type family NonVoid (t :: Type') :: Constraint where
-    NonVoid VoidType' = TypeError (Text "Type must not be void")
-    NonVoid t         = ()
 
 type instance Value Type' = Type
 type instance Value [a] = [Value a]

@@ -19,8 +19,10 @@ module LLVM.AST.Tagged.Constant where
 
 import Data.Word
 import GHC.TypeLits
+import GHC.Exts (Constraint)
 
 import LLVM.AST.TypeLevel.Type
+import LLVM.AST.Type
 import LLVM.AST.TypeLevel.Utils
 import LLVM.AST.Tagged.Tag
 import LLVM.AST.Constant
@@ -258,10 +260,17 @@ inttoptr :: forall as t width. (Known t, Known as) =>
     Constant ::: PointerType' t as
 inttoptr o1 = assertLLVMType $ IntToPtr (unTyped o1) (val @_ @(PointerType' t as))
 
--- TODO: bitcast has many rules about its argument. Implement them!
-bitcast :: forall t1 t2. Known t2 =>
+-- | We differentiate between bitcasting non-pointers and bitcasting pointers;
+-- there is little point in trying to use one function for these two distinct usecases.
+bitcast :: forall t1 t2.
+    (Known t2, NonAggregate t1, NonAggregate t2, BitSizeOf t1 ~ BitSizeOf t2) =>
     Constant ::: t1 -> Constant ::: t2
 bitcast o1 = assertLLVMType $ BitCast (unTyped o1) (val @_ @t2)
+
+bitcastPtr :: forall t1 t2 as.
+    (Known as, Known t2) =>
+    Constant ::: (PointerType' t1 as) -> Constant ::: (PointerType' t2 as)
+bitcastPtr o1 = assertLLVMType $ BitCast (unTyped o1) (val @_ @(PointerType' t2 as))
 
 icmp :: forall width.
     IntegerPredicate ->
