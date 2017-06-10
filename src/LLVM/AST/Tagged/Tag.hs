@@ -3,10 +3,14 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE PolyKinds #-}
+{-# LANGUAGE PatternSynonyms #-}
+{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module LLVM.AST.Tagged.Tag where
 
 import GHC.TypeLits
+import Data.Coerce
 
 import LLVM.AST.TypeLevel.Type
 
@@ -31,24 +35,27 @@ assertLLVMType = Typed
 unTyped :: v :::: t -> v
 unTyped (Typed v) = v
 
--- TODO: Can we have a nicer name here
+-- | A list of tagged values. The smart constructors below ensure
+-- that the type-level list has the same lengths as the value list,
+-- and that the elements have the corresponding tag.
+type v :::* (ts :: [k']) = [v] :::: ts
 
--- | A list of tagged values
-data v :::* (ts :: [k']) where
-    Nil    ::                          v :::* '[]
-    (:*)   :: v :::: t -> v :::* ts -> v :::* (t:ts)
+tnil :: v :::* '[]
+tnil = assertLLVMType []
+
+pattern (:*) :: v :::: t -> v :::* ts -> v :::* (t:ts)
+pattern x :* xs <- (unTyped -> ((coerce -> x) : (coerce -> xs) :: [v]))
+  where
+    (:*) x xs = assertLLVMType (unTyped x : unTyped xs)
+
+
 infixr 5 :*
-
-unTypeds :: v :::* ts -> [v]
-unTypeds Nil = []
-unTypeds (x :* xs) = unTyped x : unTypeds xs
 
 -- | A vector type
 data (n::Nat) × a where
     VNil   ::               0 × a
     (:×)   :: a -> n × a -> (1 + n) × a
 infixr 5 :×
-
 
 unCounted :: n × a -> [a]
 unCounted VNil = []
