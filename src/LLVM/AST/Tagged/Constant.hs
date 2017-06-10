@@ -240,12 +240,14 @@ sitofp :: forall width fpt. Known fpt =>
 sitofp o1 = assertLLVMType $ SIToFP (unTyped o1) (val @_ @(FloatingPointType' fpt))
 
 
-fptrunc :: forall fpt1 fpt2. Known fpt2=>
+fptrunc :: forall fpt1 fpt2.
+    (Known fpt2, BitSizeOfFP fpt2 <= BitSizeOfFP fpt1) =>
     Constant ::: FloatingPointType' fpt1 ->
     Constant ::: FloatingPointType' fpt2
 fptrunc o1 = assertLLVMType $ FPTrunc (unTyped o1) (val @_ @(FloatingPointType' fpt2))
 
 fpext :: forall fpt1 fpt2. Known fpt2 =>
+    (Known fpt2, BitSizeOfFP fpt1 <= BitSizeOfFP fpt2) =>
     Constant ::: FloatingPointType' fpt1 ->
     Constant ::: FloatingPointType' fpt2
 fpext o1 = assertLLVMType $ FPExt (unTyped o1) (val @_ @(FloatingPointType' fpt2))
