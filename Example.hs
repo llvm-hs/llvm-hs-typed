@@ -25,7 +25,7 @@ import LLVM.AST.TypeLevel.Type
 import qualified LLVM.AST as AST
 import qualified LLVM.AST.Global as AST
 
-c0 :: Constant ::: IntegerType' 32
+{-c0 :: Constant ::: IntegerType' 32-}
 c0 = int 42
 
 named :: forall (t :: Type'). ShortByteString -> Name ::: t
@@ -40,14 +40,20 @@ defAdd = function nm (params, False) [body]
     nm :: Name ::: (PointerType' (FunctionType' (IntegerType' 32) ArgTys) ('AddrSpace' 0))
     nm = named "add"
 
-    p1 :: Parameter ::: (IntegerType' 32)
+    {-p1 :: Parameter ::: (IntegerType' 32)-}
     p1 = parameter (named "a") []
 
-    p2 :: Parameter ::: (IntegerType' 32)
+    {-p2 :: Parameter ::: (IntegerType' 32)-}
     p2 = parameter (named "b") []
 
-    body :: BasicBlock ::: IntegerType' 32
+    {-body :: BasicBlock ::: IntegerType' 32-}
     body = basicBlock "entry" [] (doRet (ret (constantOperand c0) []))
 
-    params :: Parameter :::* ArgTys
+    {-params :: Parameter :::* ArgTys-}
     params = p1 :* p2 :* tnil
+
+module_ :: AST.Module
+module_ = defaultModule
+  { moduleName = "basic"
+  , moduleDefinitions = [GlobalDefinition defAdd]
+  }
