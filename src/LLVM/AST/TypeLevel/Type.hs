@@ -55,6 +55,7 @@ data Type'
   | NamedTypeReference' Name'
   | MetadataType'
   | TokenType'
+  | LabelType'
 
 -- | Ensures a type is not void
 type family NonVoid (t :: Type') :: Constraint where
@@ -137,6 +138,8 @@ instance Known MetadataType' where
     val = MetadataType
 instance Known TokenType' where
     val = TokenType
+instance Known LabelType' where
+    val = LabelType
 
 instance Known '[] where
     val = []
