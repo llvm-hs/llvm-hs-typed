@@ -25,8 +25,8 @@ import LLVM.AST.TypeLevel.Type
 import qualified LLVM.AST as AST
 import qualified LLVM.AST.Global as AST
 
-int32 :: Constant ::: IntegerType' 32
-int32 = int 32
+c0 :: Constant ::: IntegerType' 32
+c0 = int 42
 
 named :: forall (t :: Type'). ShortByteString -> Name ::: t
 named s = assertLLVMType $ AST.Name s
@@ -37,7 +37,7 @@ type RetTy = IntegerType' 32
 defAdd :: Global
 defAdd = function nm (params, False) [body]
   where
-    nm :: Name ::: (PointerType' (FunctionType' (IntegerType' 32) ArgTys False) ('AddrSpace' 0))
+    nm :: Name ::: (PointerType' (FunctionType' (IntegerType' 32) ArgTys) ('AddrSpace' 0))
     nm = named "add"
 
     p1 :: Parameter ::: (IntegerType' 32)
@@ -47,8 +47,7 @@ defAdd = function nm (params, False) [body]
     p2 = parameter (named "b") []
 
     body :: BasicBlock ::: IntegerType' 32
-    body = basicBlock "entry" [
-      ]
+    body = basicBlock "entry" [] (doRet (ret (constantOperand c0) []))
 
     params :: Parameter :::* ArgTys
     params = p1 :* p2 :* tnil

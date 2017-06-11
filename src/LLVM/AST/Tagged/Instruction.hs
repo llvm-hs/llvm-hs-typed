@@ -138,3 +138,7 @@ name = coerce ((:=) :: Name -> Instruction -> Named Instruction)
 do' :: Instruction ::: VoidType' -> Named Instruction
 do' = coerce (Do :: Instruction -> Named Instruction)
 
+-- | Do for terminators
+doRet :: forall (t :: Type'). Terminator ::: t -> Named (Terminator ::: t)
+doRet = coerce (Do :: Terminator -> Named Terminator)
+
