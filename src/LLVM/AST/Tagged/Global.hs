@@ -37,7 +37,7 @@ import LLVM.AST.TypeLevel.Type
 basicBlock
   :: Name
   -> [Named Instruction]
-  -> Named (Terminator ::: t)
+  -> Named Terminator ::: t
   -> (BasicBlock ::: t)
 basicBlock nm instr term = assertLLVMType $ BasicBlock nm instr (coerce term)
 
