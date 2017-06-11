@@ -47,7 +47,8 @@ data Type'
   | IntegerType' Nat
   | PointerType' Type' AddrSpace'
   | FloatingPointType' FloatingPointType
-  | FunctionType' Type' [Type'] Bool
+  | FunctionType' Type' [Type']
+    -- ^ we do not support varargs in the typed represenation
   | VectorType' Nat Type'
   | StructureType' Bool [Type']
   | ArrayType' Nat Type'
@@ -122,8 +123,8 @@ instance (Known t, Known as) => Known (PointerType' t as) where
     val = PointerType (val @_ @t) (val @_ @as)
 instance Known fpt => Known (FloatingPointType' fpt) where
     val = FloatingPointType (val @_ @fpt)
-instance (Known t, Known ts, Known b) => Known (FunctionType' t ts b) where
-    val = FunctionType (val @_ @t) (val @_ @ts) (val @_ @b)
+instance (Known t, Known ts) => Known (FunctionType' t ts) where
+    val = FunctionType (val @_ @t) (val @_ @ts) False
 instance (Known n, Known t) => Known (VectorType' n t) where
     val = VectorType (word32Val @n) (val @_ @t)
 instance (Known b, Known ts) => Known (StructureType' b ts) where
