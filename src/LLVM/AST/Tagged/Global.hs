@@ -37,9 +37,9 @@ import LLVM.AST.TypeLevel.Type
 basicBlock
   :: Name
   -> [Named Instruction]
-  -> Named Terminator
-  -> BasicBlock
-basicBlock = BasicBlock
+  -> Named (Terminator ::: t)
+  -> (BasicBlock ::: t)
+basicBlock nm instr term = assertLLVMType $ BasicBlock nm instr (coerce term)
 
 parameter
   :: forall t. Known t
@@ -57,9 +57,11 @@ function
   :: forall ret_ty args_tys as. Known ret_ty
   => (Name ::: PointerType' (FunctionType' ret_ty args_tys) as)
   -> (Parameter :::*  args_tys, Bool)
+  -> [BasicBlock ::: ret_ty]
   -> Global
-function nm (params,variadic) = functionDefaults
+function nm (params,variadic) bbs = functionDefaults
   { AST.name = coerce nm
   , AST.returnType = (val @_ @ret_ty)
   , AST.parameters = (coerce params, variadic)
+  , AST.basicBlocks = (coerce bbs)
   }
