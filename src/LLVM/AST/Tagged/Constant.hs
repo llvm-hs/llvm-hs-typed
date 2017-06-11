@@ -307,17 +307,29 @@ shuffleVector :: forall n m t.
     Constant ::: VectorType' m t
 shuffleVector = coerce ShuffleVector
 
--- TODO: add indices to the type level, calculate t2
-extractValue :: forall t t2.
-    Constant ::: t ->
-    [Word32] ->
-    Constant ::: t2
-extractValue = coerce ExtractValue
+type family NotNull (xs :: [a]) :: Constraint  where
+    NotNull '[] = TypeError (Text "The list must not be empty")
+    NotNull _ = ()
 
--- TODO: add indices to the type level, calculate t2
-insertValue :: forall t t2.
+type family ValueAt (t :: Type') (as :: [nat]) :: Type' where
+    ValueAt t '[] = t
+    ValueAt (StructureType' _ ts) (n : as) = ValueAt (Nth ts n) as
+    ValueAt (ArrayType' _ t2)     (_ : as) = ValueAt t2 as
+    ValueAt t _ = TypeError (Text "Cannot index into non-aggregate type " :$$: ShowType t)
+
+-- | The indices to extractValue need to be known at compile time, to index into
+-- structures.
+extractValue :: forall t (idxs :: [Nat]).
+    (Known idxs, NotNull idxs) =>
     Constant ::: t ->
-    Constant ::: t2 ->
-    [Word32] ->
+    Constant ::: ValueAt t idxs
+extractValue c = coerce ExtractValue c (map fromIntegral (val @_ @idxs) :: [Word32])
+
+-- | The indices to insertValue need to be known at compile time, to index into
+-- structures.
+insertValue :: forall t (idxs :: [Nat]).
+    (Known idxs, NotNull idxs) =>
+    Constant ::: t ->
+    Constant ::: ValueAt t idxs ->
     Constant ::: t
-insertValue = coerce InsertValue
+insertValue c v = coerce InsertValue c v (map fromIntegral (val @_ @idxs) :: [Word32])
