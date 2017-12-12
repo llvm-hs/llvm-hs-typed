@@ -1,18 +1,16 @@
-resolver: lts-8.14
-extra-deps:
-- llvm-hs-pure-4.0.0.0
-- llvm-hs-4.0.0.0
-- encode-string-0.1.0.0
-
+resolver: lts-9.17
 packages:
 - '.'
 - location:
-    git:    https://github.com/llvm-hs/llvm-hs.git
-    commit: d3b9de05bc7a8ea032fb1d6431e9f604436fed1f
+    git: https://github.com/llvm-hs/llvm-hs.git
+    commit: 29c584b28800be81229f2c04e71ff2bb130407a5
   extra-dep: true
   subdirs:
-    - 'llvm-hs'
-    - 'llvm-hs-pure'
+    - llvm-hs-pure
+
+extra-deps:
+- llvm-hs-5.1.0
+- encode-string-0.1.0.0
 
 flags:
   llvm-hs:
