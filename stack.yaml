@@ -9,9 +9,4 @@ packages:
     - llvm-hs-pure
 
 extra-deps:
-- llvm-hs-5.1.0
 - encode-string-0.1.0.0
-
-flags:
-  llvm-hs:
-    shared-llvm: true
