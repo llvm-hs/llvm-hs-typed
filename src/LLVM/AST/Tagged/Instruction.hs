@@ -146,4 +146,3 @@ do' = coerce (Do :: Instruction -> Named Instruction)
 
 -- Local helper, for Terminators
 doRet = assertLLVMType . Do
-

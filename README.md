@@ -3,9 +3,10 @@ llvm-hs-typed
 
 [![Build Status](https://travis-ci.org/llvm-hs/llvm-hs-typed.svg?branch=master)](https://travis-ci.org/llvm-hs/llvm-hs-typed)
 
-An experimental branch of the llvm-hs-pure AST that enforces the semantics of
-correct AST construction using the Haskell type system to prevent malformed
-ASTs.
+An experimental branch of
+[llvm-hs-pure](https://hackage.haskell.org/package/llvm-hs-pure) AST that
+enforces the semantics of correct AST construction using the Haskell type system
+to prevent malformed ASTs.
 
 Usage
 -----

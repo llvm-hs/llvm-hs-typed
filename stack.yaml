@@ -1,6 +1,6 @@
-resolver: lts-9.17
+resolver: lts-10.0
 packages:
 - '.'
 extra-deps:
-- llvm-hs-pure-5.1.0
+- llvm-hs-pure-5.1.1
 - encode-string-0.1.0.0
