@@ -23,8 +23,8 @@ import LLVM.AST.TypeLevel.Type
 import LLVM.AST.Operand
 import LLVM.AST.Constant
 
-constantOperand 
-  :: forall t. Known t 
+constantOperand
+  :: forall t. Known t
   => (Constant ::: t)
   -> Operand ::: t
 constantOperand c = assertLLVMType (ConstantOperand (coerce c))
