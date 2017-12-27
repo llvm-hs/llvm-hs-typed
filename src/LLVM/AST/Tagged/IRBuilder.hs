@@ -5,6 +5,7 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module LLVM.AST.Tagged.IRBuilder (
@@ -15,15 +16,29 @@ module LLVM.AST.Tagged.IRBuilder (
   -- ** Instructions
   fadd,
   fmul,
+  fsub,
+  fdiv,
+  frem,
 
   add,
   mul,
-
+  sub,
+  udiv,
+  sdiv,
+  urem,
+  shl,
+  lshr,
+  ashr,
+  and,
+  or,
+  xor,
   sext,
   zext,
+  fptoui,
+  fptosi,
 ) where
 
-import LLVM.Prelude
+import LLVM.Prelude hiding (and, or)
 import LLVM.AST
 import LLVM.AST.Type
 import LLVM.AST.TypeLevel.Type
@@ -195,3 +210,21 @@ fptosi
   => (Operand ::: (FloatingPointType' fpt))
   -> m (Operand ::: (IntegerType' width))
 fptosi a = IR.fptosi (coerce a) (val @_ @(IntegerType' width)) >>= pure . coerce
+
+gep = undefined
+trunc = undefined
+uitofp = undefined
+sitofp = undefined
+fptrunc = undefined
+fpext = undefined
+ptrtoint = undefined
+inttoptr = undefined
+bitcast = undefined
+icmp = undefined
+fcmp = undefined
+select = undefined
+extractElement = undefined
+insertElement = undefined
+shuffleVector = undefined
+extractValue = undefined
+insertValue = undefined
