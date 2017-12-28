@@ -49,11 +49,20 @@ module LLVM.AST.Tagged.IRBuilder (
 
   bitcast,
   bitcastPtr,
+
+  br,
+  ret,
+  retVoid,
+  condBr,
+  switch,
+  phi,
+  IR.unreachable,
 ) where
 
 import LLVM.Prelude hiding (and, or)
 import LLVM.AST
 import LLVM.AST.Type
+import LLVM.AST.Constant
 import LLVM.AST.TypeLevel.Type
 import LLVM.AST.TypeLevel.Utils
 import LLVM.AST.Tagged.Tag
@@ -310,6 +319,37 @@ bitcastPtr
   => (Operand ::: PointerType' t1 as)
   -> m (Operand ::: PointerType' t2 as)
 bitcastPtr a = IR.bitcast (coerce a) (val @_ @(PointerType' t2 as)) >>= pure . coerce
+
+br :: IR.MonadIRBuilder m => Name ::: t -> m ()
+br val = IR.br (coerce val)
+
+ret :: IR.MonadIRBuilder m => Operand ::: t -> m ()
+ret val = IR.ret (coerce val)
+
+retVoid :: IR.MonadIRBuilder m => m ()
+retVoid = IR.retVoid
+
+condBr
+  :: IR.MonadIRBuilder m
+  => (Operand ::: t)
+  -> Name ::: t2
+  -> Name ::: t2
+  -> m ()
+condBr cond tdest fdest = IR.condBr (coerce cond) (coerce tdest) (coerce fdest)
+
+switch
+  :: IR.MonadIRBuilder m
+  => (Operand ::: t)
+  -> (Name ::: t2)
+  -> [(Constant ::: t, Name ::: t2)]
+  -> m ()
+switch val def dests = IR.switch (coerce val) (coerce def) (coerce dests)
+
+phi
+  :: IR.MonadIRBuilder m
+  => [(Operand ::: t, Name ::: t2)]
+  -> m (Operand ::: t)
+phi dests = IR.phi (coerce dests) >>= pure . coerce
 
 gep = undefined
 extractElement = undefined
