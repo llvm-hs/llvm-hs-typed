@@ -50,6 +50,8 @@ import LLVM.AST.Name (Name)
 import LLVM.AST.Float (SomeFloat)
 import LLVM.AST.IntegerPredicate (IntegerPredicate)
 import LLVM.AST.FloatingPointPredicate (FloatingPointPredicate)
+import qualified LLVM.AST.IntegerPredicate as IP
+import qualified LLVM.AST.FloatingPointPredicate as FP
 
 import GHC.TypeLits
 import GHC.Exts (Constraint)
@@ -211,17 +213,70 @@ fptosi
   -> m (Operand ::: (IntegerType' width))
 fptosi a = IR.fptosi (coerce a) (val @_ @(IntegerType' width)) >>= pure . coerce
 
+uitofp
+  :: forall fpt width. Known width
+  => forall m. IR.MonadIRBuilder m
+  => (Operand ::: (FloatingPointType' fpt))
+  -> m (Operand ::: (IntegerType' width))
+uitofp a = IR.uitofp (coerce a) (val @_ @(IntegerType' width)) >>= pure . coerce
+
+sitofp
+  :: forall fpt width. Known width
+  => forall m. IR.MonadIRBuilder m
+  => (Operand ::: (FloatingPointType' fpt))
+  -> m (Operand ::: (IntegerType' width))
+sitofp a = IR.sitofp (coerce a) (val @_ @(IntegerType' width)) >>= pure . coerce
+
+trunc
+  :: forall width1 width2. (Known width2, width1 <= width2)
+  => forall m. IR.MonadIRBuilder m
+  => (Operand ::: (IntegerType' width1))
+  -> m (Operand ::: (IntegerType' width2))
+trunc a = IR.trunc (coerce a) (val @_ @(IntegerType' width2)) >>= pure . coerce
+
+ptrtoint
+  :: forall width t as. (Known width)
+  => forall m. IR.MonadIRBuilder m
+  => (Operand ::: PointerType' t as)
+  -> m (Operand ::: IntegerType' width)
+ptrtoint a = IR.ptrtoint (coerce a) (val @_ @(IntegerType' width)) >>= pure . coerce
+
+inttoptr
+  :: forall width t as. (Known width)
+  => forall m. IR.MonadIRBuilder m
+  => (Operand ::: IntegerType' width)
+  -> m (Operand ::: PointerType' t as)
+inttoptr a = IR.inttoptr (coerce a) (val @_ @(IntegerType' width)) >>= pure . coerce
+
+{-
+fptrunc
+  :: forall width1 width2. (Known width2, width1 <= width2)
+  => forall m. IR.MonadIRBuilder m
+  => (Operand ::: (FloatingPointType' width1))
+  -> m (Operand ::: (FloatingPointType' width2))
+fptrunc a = IR.fptrunc (coerce a) (val @_ @(IntegerType' width2)) >>= pure . coerce
+-}
+
+
+icmp
+  :: IR.MonadIRBuilder m
+  => IP.IntegerPredicate
+  -> (Operand ::: IntegerType' t)
+  -> (Operand ::: IntegerType' t)
+  -> m (Operand ::: IntegerType' 1)
+icmp pred a b = IR.icmp pred (coerce a) (coerce b) >>= pure . coerce
+
+fcmp
+  :: IR.MonadIRBuilder m
+  => FP.FloatingPointPredicate
+  -> (Operand ::: FloatingPointType' t)
+  -> (Operand ::: FloatingPointType' t)
+  -> m (Operand ::: IntegerType' 1)
+fcmp pred a b = IR.fcmp pred (coerce a) (coerce b) >>= pure . coerce
+
 gep = undefined
-trunc = undefined
-uitofp = undefined
-sitofp = undefined
-fptrunc = undefined
 fpext = undefined
-ptrtoint = undefined
-inttoptr = undefined
 bitcast = undefined
-icmp = undefined
-fcmp = undefined
 select = undefined
 extractElement = undefined
 insertElement = undefined
