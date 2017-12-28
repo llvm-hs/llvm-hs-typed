@@ -36,6 +36,19 @@ module LLVM.AST.Tagged.IRBuilder (
   zext,
   fptoui,
   fptosi,
+  sitofp,
+  uitofp,
+
+  trunc,
+  inttoptr,
+  ptrtoint,
+
+  select,
+  icmp,
+  fcmp,
+
+  bitcast,
+  bitcastPtr,
 ) where
 
 import LLVM.Prelude hiding (and, or)
@@ -274,10 +287,31 @@ fcmp
   -> m (Operand ::: IntegerType' 1)
 fcmp pred a b = IR.fcmp pred (coerce a) (coerce b) >>= pure . coerce
 
-gep = undefined
 fpext = undefined
-bitcast = undefined
-select = undefined
+
+select
+  :: forall t m. IR.MonadIRBuilder m
+  => Operand ::: IntegerType' 1
+  -> Operand ::: t
+  -> Operand ::: t
+  -> m (Operand ::: t)
+select cond t f = IR.select (coerce cond) (coerce t) (coerce f) >>= pure . coerce
+
+bitcast
+  :: forall t1 t2 m. IR.MonadIRBuilder m
+  => (Known t1, Known t2, NonAggregate t1, NonAggregate t2)
+  => (Operand ::: t1)
+  -> m (Operand ::: t2)
+bitcast a = IR.bitcast (coerce a) (val @_ @t2) >>= pure . coerce
+
+bitcastPtr
+  :: forall t1 t2 as m. IR.MonadIRBuilder m
+  => (Known as, Known t2)
+  => (Operand ::: PointerType' t1 as)
+  -> m (Operand ::: PointerType' t2 as)
+bitcastPtr a = IR.bitcast (coerce a) (val @_ @(PointerType' t2 as)) >>= pure . coerce
+
+gep = undefined
 extractElement = undefined
 insertElement = undefined
 shuffleVector = undefined
