@@ -32,6 +32,56 @@ import LLVM.AST.FloatingPointPredicate (FloatingPointPredicate)
 
 import Data.Coerce
 
+type family NotNull (xs :: [a]) :: Constraint  where
+    NotNull '[] = TypeError (Text "The list must not be empty")
+    NotNull _ = ()
+
+type family ValueAt (t :: Type') (as :: [nat]) :: Type' where
+    ValueAt t '[] = t
+    ValueAt (StructureType' _ ts) (n : as) = ValueAt (Nth ts n) as
+    ValueAt (ArrayType' _ t2)     (_ : as) = ValueAt t2 as
+    ValueAt t _ = TypeError (Text "Cannot index into non-aggregate type " :$$: ShowType t)
+
+-- A list of arguments to @getElementPtr@ which, on the type level,
+-- tracks which arguments are statically known.
+data GEP_Args (static_args :: [Maybe Nat])  where
+    None     :: GEP_Args '[]
+    -- | Statically known index. Only this is allowed to index into a structure
+    AKnown   :: forall n xs. KnownNat n =>
+        GEP_Args xs ->
+        GEP_Args (Just n : xs)
+    -- | Dynamically known index.
+    AUnknown :: forall width xs.
+        Constant ::: IntegerType' width ->
+        GEP_Args xs ->
+        GEP_Args (Nothing : xs)
+
+-- | This type family calculates the return type of a 'getElementPtr' instruction.
+type family GEP_Res (t :: Type') (as :: [Maybe nat]) :: Type' where
+    GEP_Res t '[] = t
+    GEP_Res (StructureType' _ ts) (Just n : as) = GEP_Res (Nth ts n) as
+    GEP_Res (PointerType' t2 _)   (_ : as) = GEP_Res t2 as
+    GEP_Res (ArrayType' _ t2)     (_ : as) = GEP_Res t2 as
+
+
+getGEPArgs :: forall static_args. GEP_Args static_args -> [Constant]
+getGEPArgs None = []
+getGEPArgs (AKnown as) =
+    let i :: forall n xs . (Just n : xs) ~ static_args => Integer
+            -- this extracts the n from the static args
+        i = val @_ @n
+    in Int (word32Val @32) i : getGEPArgs as
+getGEPArgs (AUnknown v as) = unTyped v : getGEPArgs as
+
+getElementPtr :: forall t as static_args t2.
+    Bool ->
+    Constant ::: PointerType' t as ->
+    GEP_Args static_args ->
+    Constant ::: GEP_Res (PointerType' t as) static_args
+getElementPtr in_bounds address indices
+    = assertLLVMType $ GetElementPtr in_bounds (unTyped address) (getGEPArgs indices)
+
+
 int :: forall width. Known width => Integer -> Constant ::: IntegerType' width
 int value = assertLLVMType $ Int (word32Val @width) value
 
@@ -164,45 +214,6 @@ xor :: forall width.
     Constant ::: IntegerType' width
 xor = coerce Xor
 
--- A list of arguments to @getElementPtr@ which, on the type level,
--- tracks which arguments are statically known.
-data GEP_Args (static_args :: [Maybe Nat])  where
-    None     :: GEP_Args '[]
-    -- | Statically known index. Only this is allowed to index into a structure
-    AKnown   :: forall n xs. KnownNat n =>
-        GEP_Args xs ->
-        GEP_Args (Just n : xs)
-    -- | Dynamically known index.
-    AUnknown :: forall width xs.
-        Constant ::: IntegerType' width ->
-        GEP_Args xs ->
-        GEP_Args (Nothing : xs)
-
--- | This type family calculates the return type of a 'getElementPtr' instruction.
-type family GEP_Res (t :: Type') (as :: [Maybe nat]) :: Type' where
-    GEP_Res t '[] = t
-    GEP_Res (StructureType' _ ts) (Just n : as) = GEP_Res (Nth ts n) as
-    GEP_Res (PointerType' t2 _)   (_ : as) = GEP_Res t2 as
-    GEP_Res (ArrayType' _ t2)     (_ : as) = GEP_Res t2 as
-
-
-getGEPArgs :: forall static_args. GEP_Args static_args -> [Constant]
-getGEPArgs None = []
-getGEPArgs (AKnown as) =
-    let i :: forall n xs . (Just n : xs) ~ static_args => Integer
-            -- this extracts the n from the static args
-        i = val @_ @n
-    in Int (word32Val @32) i : getGEPArgs as
-getGEPArgs (AUnknown v as) = unTyped v : getGEPArgs as
-
-getElementPtr :: forall t as static_args t2.
-    Bool ->
-    Constant ::: PointerType' t as ->
-    GEP_Args static_args ->
-    Constant ::: GEP_Res (PointerType' t as) static_args
-getElementPtr in_bounds address indices
-    = assertLLVMType $ GetElementPtr in_bounds (unTyped address) (getGEPArgs indices)
-
 trunc :: forall width1 width2. (Known width2, width2 <= width1) =>
     Constant ::: IntegerType' width1 -> Constant ::: IntegerType' width2
 trunc o1 = coerce Trunc o1 (val @_ @(IntegerType' width2))
@@ -306,16 +317,6 @@ shuffleVector :: forall n m t.
     Constant ::: VectorType' m (IntegerType' 32) ->
     Constant ::: VectorType' m t
 shuffleVector = coerce ShuffleVector
-
-type family NotNull (xs :: [a]) :: Constraint  where
-    NotNull '[] = TypeError (Text "The list must not be empty")
-    NotNull _ = ()
-
-type family ValueAt (t :: Type') (as :: [nat]) :: Type' where
-    ValueAt t '[] = t
-    ValueAt (StructureType' _ ts) (n : as) = ValueAt (Nth ts n) as
-    ValueAt (ArrayType' _ t2)     (_ : as) = ValueAt t2 as
-    ValueAt t _ = TypeError (Text "Cannot index into non-aggregate type " :$$: ShowType t)
 
 -- | The indices to extractValue need to be known at compile time, to index into
 -- structures.

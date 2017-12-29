@@ -121,8 +121,6 @@ frem
   -> m (Operand ::: (IntegerType' t))
 frem a b = IR.frem (coerce a) (coerce b) >>= pure . coerce
 
-
-
 add
   :: IR.MonadIRBuilder m
   => (Operand ::: (IntegerType' t))
@@ -320,7 +318,7 @@ bitcastPtr
   -> m (Operand ::: PointerType' t2 as)
 bitcastPtr a = IR.bitcast (coerce a) (val @_ @(PointerType' t2 as)) >>= pure . coerce
 
-br :: IR.MonadIRBuilder m => Name ::: t -> m ()
+br :: IR.MonadIRBuilder m => Name ::: LabelType' -> m ()
 br val = IR.br (coerce val)
 
 ret :: IR.MonadIRBuilder m => Operand ::: t -> m ()
@@ -332,8 +330,8 @@ retVoid = IR.retVoid
 condBr
   :: IR.MonadIRBuilder m
   => (Operand ::: t)
-  -> Name ::: t2
-  -> Name ::: t2
+  -> Name ::: LabelType'
+  -> Name ::: LabelType'
   -> m ()
 condBr cond tdest fdest = IR.condBr (coerce cond) (coerce tdest) (coerce fdest)
 
@@ -341,19 +339,29 @@ switch
   :: IR.MonadIRBuilder m
   => (Operand ::: t)
   -> (Name ::: t2)
-  -> [(Constant ::: t, Name ::: t2)]
+  -> [(Constant ::: t, Name ::: LabelType')]
   -> m ()
 switch val def dests = IR.switch (coerce val) (coerce def) (coerce dests)
 
 phi
   :: IR.MonadIRBuilder m
-  => [(Operand ::: t, Name ::: t2)]
+  => [(Operand ::: t, Name ::: LabelType')]
   -> m (Operand ::: t)
 phi dests = IR.phi (coerce dests) >>= pure . coerce
 
 gep = undefined
 extractElement = undefined
-insertElement = undefined
+
+{-
+insertElement
+  :: forall n t width m.  IR.MonadIRBuilder m
+  => VectorType' n t
+  -> Operand ::: t
+  -> Operand ::: IntegerType' width
+  -> m (Operand ::: VectorType' n t)
+insertElement a b c = IR.insertElement (coerce a) (coerce b) (coerce c) >>= pure . coerce
+-}
+
 shuffleVector = undefined
 extractValue = undefined
 insertValue = undefined
