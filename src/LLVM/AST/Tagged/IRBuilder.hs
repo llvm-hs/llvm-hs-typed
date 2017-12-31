@@ -277,8 +277,13 @@ fptrunc
   => (Operand ::: (FloatingPointType' width1))
   -> m (Operand ::: (FloatingPointType' width2))
 fptrunc a = IR.fptrunc (coerce a) (val @_ @(IntegerType' width2)) >>= pure . coerce
--}
 
+fpext :: forall fpt1 fpt2. Known fpt2 =>
+  (Known fpt2, BitSizeOfFP fpt1 <= BitSizeOfFP fpt2)
+  => Operand ::: FloatingPointType' fpt1
+  -> Operand ::: FloatingPointType' fpt2
+fpext a = IR.fpext a >>= pure . coerce
+-}
 
 icmp
   :: IR.MonadIRBuilder m
@@ -295,8 +300,6 @@ fcmp
   -> (Operand ::: FloatingPointType' t)
   -> m (Operand ::: IntegerType' 1)
 fcmp pred a b = IR.fcmp pred (coerce a) (coerce b) >>= pure . coerce
-
-fpext = undefined
 
 select
   :: forall t m. IR.MonadIRBuilder m
