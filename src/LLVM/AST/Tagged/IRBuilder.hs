@@ -38,6 +38,7 @@ module LLVM.AST.Tagged.IRBuilder (
   fptosi,
   sitofp,
   uitofp,
+  gep,
 
   trunc,
   inttoptr,
@@ -66,6 +67,7 @@ import LLVM.AST.Constant
 import LLVM.AST.TypeLevel.Type
 import LLVM.AST.TypeLevel.Utils
 import LLVM.AST.Tagged.Tag
+import LLVM.AST.Tagged.Constant (GEP_Args, GEP_Res, getElementPtr, getGEPArgs)
 import LLVM.AST.Operand
 import LLVM.AST.Instruction
 import LLVM.AST.Name (Name)
@@ -349,10 +351,18 @@ phi
   -> m (Operand ::: t)
 phi dests = IR.phi (coerce dests) >>= pure . coerce
 
-gep = undefined
-extractElement = undefined
+gep
+  :: forall t as static_args m. IR.MonadIRBuilder m
+  => (Operand ::: PointerType' t as)
+  -> GEP_Args static_args
+  -> m (Operand ::: GEP_Res (PointerType' t as) static_args)
+gep address indices = IR.gep (coerce address) args >>= pure . coerce
+  where
+    args = fmap ConstantOperand (getGEPArgs indices)
 
 {-
+Waiting to sync with latest LLVM.IRBuilder in llvm-hs-pure
+
 insertElement
   :: forall n t width m.  IR.MonadIRBuilder m
   => VectorType' n t
@@ -360,8 +370,9 @@ insertElement
   -> Operand ::: IntegerType' width
   -> m (Operand ::: VectorType' n t)
 insertElement a b c = IR.insertElement (coerce a) (coerce b) (coerce c) >>= pure . coerce
--}
 
 shuffleVector = undefined
 extractValue = undefined
 insertValue = undefined
+extractElement = undefined
+-}
