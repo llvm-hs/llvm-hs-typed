@@ -11,7 +11,14 @@
 module LLVM.AST.Tagged.IRBuilder (
   -- ** Operands
   emitInstr,
+  emitInstrVoid,
   emitTerm,
+  emitBlockStart,
+  block,
+  fresh,
+  freshName,
+  freshUnName,
+  named,
 
   -- ** Instructions
   fadd,
@@ -44,7 +51,6 @@ module LLVM.AST.Tagged.IRBuilder (
   inttoptr,
   ptrtoint,
 
-  select,
   icmp,
   fcmp,
 
@@ -57,6 +63,7 @@ module LLVM.AST.Tagged.IRBuilder (
   condBr,
   switch,
   phi,
+  select,
   IR.unreachable,
 ) where
 
@@ -82,11 +89,40 @@ import GHC.Exts (Constraint)
 import Data.Coerce
 import qualified LLVM.IRBuilder as IR
 
+-------------------------------------------------------------------------------
+-- Builder
+-------------------------------------------------------------------------------
+
 emitInstr :: IR.MonadIRBuilder m => Type -> (Instruction ::: t) -> m Operand
 emitInstr ty instr = IR.emitInstr ty (coerce instr)
 
+emitInstrVoid :: IR.MonadIRBuilder m => (Instruction ::: t) -> m ()
+emitInstrVoid instr = IR.emitInstrVoid (coerce instr)
+
 emitTerm :: IR.MonadIRBuilder m => (Terminator ::: t) -> m ()
 emitTerm instr = IR.emitTerm (coerce instr)
+
+emitBlockStart :: IR.MonadIRBuilder m => (Name ::: LabelType') -> m ()
+emitBlockStart instr = IR.emitBlockStart (coerce instr)
+
+block :: IR.MonadIRBuilder m => m (Name ::: LabelType')
+block = IR.block >>= pure . coerce
+
+fresh :: IR.MonadIRBuilder m => m (Name ::: t)
+fresh = IR.fresh >>= pure . coerce
+
+freshName :: IR.MonadIRBuilder m => ShortByteString -> m (Name ::: t)
+freshName prefix = IR.freshName prefix >>= pure . coerce
+
+freshUnName :: IR.MonadIRBuilder m => m (Name ::: t)
+freshUnName = IR.freshUnName >>= pure . coerce
+
+named :: IR.MonadIRBuilder m => m (r ::: t) -> ShortByteString -> m (r ::: t)
+named m = IR.named m
+
+-------------------------------------------------------------------------------
+-- Instructions
+-------------------------------------------------------------------------------
 
 fadd
   :: IR.MonadIRBuilder m
