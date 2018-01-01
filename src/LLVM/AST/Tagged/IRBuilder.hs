@@ -7,6 +7,7 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
 
 module LLVM.AST.Tagged.IRBuilder (
   -- ** Operands
@@ -57,14 +58,20 @@ module LLVM.AST.Tagged.IRBuilder (
   bitcast,
   bitcastPtr,
 
+  extractElement,
+  insertElement,
+  shuffleVector,
+  extractValue,
+  insertValue,
+
   br,
   ret,
-  retVoid,
   condBr,
   switch,
   phi,
   select,
   IR.unreachable,
+  IR.retVoid,
 ) where
 
 import LLVM.Prelude hiding (and, or)
@@ -74,7 +81,7 @@ import LLVM.AST.Constant
 import LLVM.AST.TypeLevel.Type
 import LLVM.AST.TypeLevel.Utils
 import LLVM.AST.Tagged.Tag
-import LLVM.AST.Tagged.Constant (GEP_Args, GEP_Res, getElementPtr, getGEPArgs)
+import LLVM.AST.Tagged.Constant (GEP_Args, GEP_Res, NotNull, ValueAt, getElementPtr, getGEPArgs)
 import LLVM.AST.Operand
 import LLVM.AST.Instruction
 import LLVM.AST.Name (Name)
@@ -306,20 +313,17 @@ inttoptr
   -> m (Operand ::: PointerType' t as)
 inttoptr a = IR.inttoptr (coerce a) (val @_ @(IntegerType' width)) >>= pure . coerce
 
-{-
-fptrunc
-  :: forall width1 width2. (Known width2, width1 <= width2)
-  => forall m. IR.MonadIRBuilder m
-  => (Operand ::: (FloatingPointType' width1))
-  -> m (Operand ::: (FloatingPointType' width2))
-fptrunc a = IR.fptrunc (coerce a) (val @_ @(IntegerType' width2)) >>= pure . coerce
+fptrunc :: forall fpt1 fpt2 m.
+    (Known fpt2, BitSizeOfFP fpt2 <= BitSizeOfFP fpt1, IR.MonadIRBuilder m)
+    => Operand ::: FloatingPointType' fpt1
+    -> m (Operand ::: FloatingPointType' fpt2)
+fptrunc a = IR.fptrunc (coerce a) (val @_ @(FloatingPointType' fpt2)) >>= pure . coerce
 
-fpext :: forall fpt1 fpt2. Known fpt2 =>
-  (Known fpt2, BitSizeOfFP fpt1 <= BitSizeOfFP fpt2)
+fpext :: forall fpt1 fpt2 m. Known fpt2 =>
+  (Known fpt2, BitSizeOfFP fpt1 <= BitSizeOfFP fpt2, IR.MonadIRBuilder m)
   => Operand ::: FloatingPointType' fpt1
-  -> Operand ::: FloatingPointType' fpt2
-fpext a = IR.fpext a >>= pure . coerce
--}
+  -> m (Operand ::: FloatingPointType' fpt2)
+fpext a = IR.fpext (coerce a) (val @_ @(FloatingPointType' fpt2)) >>= pure . coerce
 
 icmp
   :: IR.MonadIRBuilder m
@@ -359,14 +363,11 @@ bitcastPtr
   -> m (Operand ::: PointerType' t2 as)
 bitcastPtr a = IR.bitcast (coerce a) (val @_ @(PointerType' t2 as)) >>= pure . coerce
 
-br :: IR.MonadIRBuilder m => Name ::: LabelType' -> m ()
+br :: IR.MonadIRBuilder m => (Name ::: LabelType') -> m ()
 br val = IR.br (coerce val)
 
-ret :: IR.MonadIRBuilder m => Operand ::: t -> m ()
+ret :: IR.MonadIRBuilder m => (Operand ::: t) -> m ()
 ret val = IR.ret (coerce val)
-
-retVoid :: IR.MonadIRBuilder m => m ()
-retVoid = IR.retVoid
 
 condBr
   :: IR.MonadIRBuilder m
@@ -399,19 +400,39 @@ gep address indices = IR.gep (coerce address) args >>= pure . coerce
   where
     args = fmap ConstantOperand (getGEPArgs indices)
 
-{-
-Waiting to sync with latest LLVM.IRBuilder in llvm-hs-pure
-
 insertElement
   :: forall n t width m.  IR.MonadIRBuilder m
-  => VectorType' n t
+  => Operand ::: VectorType' n t
   -> Operand ::: t
   -> Operand ::: IntegerType' width
   -> m (Operand ::: VectorType' n t)
 insertElement a b c = IR.insertElement (coerce a) (coerce b) (coerce c) >>= pure . coerce
 
-shuffleVector = undefined
-extractValue = undefined
-insertValue = undefined
-extractElement = undefined
--}
+extractElement
+  :: forall n t width m.  IR.MonadIRBuilder m
+  => Operand ::: VectorType' n t
+  -> Operand ::: IntegerType' width
+  -> m (Operand ::: t)
+extractElement v i = IR.extractElement (coerce v) (coerce i) >>= pure . coerce
+
+shuffleVector
+  :: forall n l t width m.  IR.MonadIRBuilder m
+  => Operand ::: VectorType' n t
+  -> Operand ::: VectorType' n t
+  -> Constant ::: VectorType' l (IntegerType' 32)
+  -> m (Operand ::: VectorType' l t)
+shuffleVector a b c = IR.shuffleVector (coerce a) (coerce b) (coerce c) >>= pure . coerce
+
+extractValue
+  :: forall t (idxs :: [Nat]) m.
+  (Known idxs, NotNull idxs, IR.MonadIRBuilder m)
+  => Operand ::: t
+  -> m (Operand ::: ValueAt t idxs)
+extractValue c = IR.extractValue (coerce c) (map fromIntegral (val @_ @idxs) :: [Word32]) >>= pure . coerce
+
+insertValue :: forall t (idxs :: [Nat])m .
+  (Known idxs, NotNull idxs, IR.MonadIRBuilder  m)
+  => Operand ::: t
+  -> Operand ::: ValueAt t idxs
+  -> m (Operand ::: t)
+insertValue c v = IR.insertValue (coerce c) (coerce v) (map fromIntegral (val @_ @idxs) :: [Word32]) >>= pure . coerce

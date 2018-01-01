@@ -1,6 +1,11 @@
 resolver: lts-10.0
 packages:
 - '.'
+- location:
+    git: https://github.com/llvm-hs/llvm-hs.git
+    commit: 7fcccd3cc6bddd44d77602e13f85a8402ab35cb0
+  extra-dep: true
+  subdirs:
+    - 'llvm-hs-pure'
 extra-deps:
-- llvm-hs-pure-5.1.1
 - encode-string-0.1.0.0
