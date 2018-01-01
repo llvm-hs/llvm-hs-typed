@@ -1,3 +1,11 @@
+{- |
+
+This module provides a type-safe variant of "LLVM.IRBuilder" interface.
+
+Example 1:
+
+-}
+
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE RankNTypes #-}
@@ -15,11 +23,13 @@ module LLVM.AST.Tagged.IRBuilder (
   emitInstrVoid,
   emitTerm,
   emitBlockStart,
-  block,
   fresh,
   freshName,
   freshUnName,
   named,
+
+  block,
+  function,
 
   -- ** Instructions
   fadd,
@@ -75,7 +85,7 @@ module LLVM.AST.Tagged.IRBuilder (
 ) where
 
 import LLVM.Prelude hiding (and, or)
-import LLVM.AST
+import LLVM.AST hiding (function)
 import LLVM.AST.Type
 import LLVM.AST.Constant
 import LLVM.AST.TypeLevel.Type
@@ -83,7 +93,7 @@ import LLVM.AST.TypeLevel.Utils
 import LLVM.AST.Tagged.Tag
 import LLVM.AST.Tagged.Constant (GEP_Args, GEP_Res, NotNull, ValueAt, getElementPtr, getGEPArgs)
 import LLVM.AST.Operand
-import LLVM.AST.Instruction
+import LLVM.AST.Instruction hiding (function)
 import LLVM.AST.Name (Name)
 import LLVM.AST.Float (SomeFloat)
 import LLVM.AST.IntegerPredicate (IntegerPredicate)
@@ -126,6 +136,21 @@ freshUnName = IR.freshUnName >>= pure . coerce
 
 named :: IR.MonadIRBuilder m => m (r ::: t) -> ShortByteString -> m (r ::: t)
 named m = IR.named m
+
+function
+  :: forall (t :: Type') m. (Known t, IR.MonadModuleBuilder m)
+  => Name  -- ^ Function name
+  -> [(Type, IR.ParameterName)]  -- ^ Parameter types and name suggestions
+  -> ([Operand] -> IR.IRBuilderT m ())  -- ^ Function body builder
+  -> m (Operand ::: t)
+function nm params m = IR.function nm params (val @_ @t) m >>= pure . coerce
+
+-------------------------------------------------------------------------------
+-- Types
+-------------------------------------------------------------------------------
+
+type I32 = IntegerType' 32
+type I64 = IntegerType' 64
 
 -------------------------------------------------------------------------------
 -- Instructions
