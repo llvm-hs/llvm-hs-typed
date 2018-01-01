@@ -31,6 +31,15 @@ module LLVM.AST.Tagged.IRBuilder (
   block,
   function,
 
+  -- ** Types
+  i1,
+  i8,
+  i32,
+  i64,
+  float,
+  double,
+  ptr,
+
   -- ** Instructions
   fadd,
   fmul,
@@ -86,7 +95,7 @@ module LLVM.AST.Tagged.IRBuilder (
 
 import LLVM.Prelude hiding (and, or)
 import LLVM.AST hiding (function)
-import LLVM.AST.Type
+import qualified LLVM.AST.Type as AST
 import LLVM.AST.Constant
 import LLVM.AST.TypeLevel.Type
 import LLVM.AST.TypeLevel.Utils
@@ -151,6 +160,30 @@ function nm params m = IR.function nm params (val @_ @t) m >>= pure . coerce
 
 type I32 = IntegerType' 32
 type I64 = IntegerType' 64
+
+i1 :: Type ::: IntegerType' 1
+i1 = coerce AST.i1
+
+i8 :: Type ::: IntegerType' 8
+i8 = coerce AST.i8
+
+i32 :: Type ::: IntegerType' 32
+i32 = coerce AST.i32
+
+i64 :: Type ::: IntegerType' 64
+i64 = coerce AST.i32
+
+void :: Type ::: VoidType'
+void = coerce AST.void
+
+double :: Type ::: FloatingPointType' DoubleFP
+double = coerce AST.double
+
+float :: Type ::: FloatingPointType' FloatFP
+float = coerce AST.float
+
+ptr :: Known t => (Type ::: t) -> (Type ::: (PointerType' t ('AddrSpace' 0)))
+ptr ty = coerce (AST.ptr (coerce ty))
 
 -------------------------------------------------------------------------------
 -- Instructions
