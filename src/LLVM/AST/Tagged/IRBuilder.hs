@@ -139,9 +139,9 @@ named m = IR.named m
 
 function
   :: forall (t :: Type') m. (Known t, IR.MonadModuleBuilder m)
-  => Name  -- ^ Function name
-  -> [(Type, IR.ParameterName)]  -- ^ Parameter types and name suggestions
-  -> ([Operand] -> IR.IRBuilderT m ())  -- ^ Function body builder
+  => Name                              -- ^ Function name
+  -> [(Type, IR.ParameterName)]        -- ^ Parameter types and name suggestions
+  -> ([Operand] -> IR.IRBuilderT m ()) -- ^ Function body builder
   -> m (Operand ::: t)
 function nm params m = IR.function nm params (val @_ @t) m >>= pure . coerce
 

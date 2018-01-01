@@ -22,6 +22,7 @@ import LLVM.AST.Tagged.Global
 import LLVM.AST.Tagged.Constant
 import LLVM.AST.Tagged.Tag
 import LLVM.AST.TypeLevel.Type
+
 import qualified LLVM.AST as AST
 import qualified LLVM.AST.Global as AST
 
@@ -46,10 +47,10 @@ defAdd = function nm (params, False) [body, body]
     {-p2 :: Parameter ::: (IntegerType' 32)-}
     p2 = parameter (named "b") []
 
-    body :: BasicBlock ::: IntegerType' 32
-    body = basicBlock "entry" [] (doRet (ret (constantOperand c0) []))
+    {-body :: BasicBlock ::: IntegerType' 32-}
+    body = basicBlock "entry" [] ((ret (constantOperand c0) []))
 
-    params :: Parameter :::* ArgTys
+    {-params :: Parameter :::* ArgTys-}
     params = p1 :* p2 :* tnil
 
 module_ :: AST.Module
