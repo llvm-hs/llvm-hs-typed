@@ -12,20 +12,20 @@ Usage
 -----
 
 ```haskell
-{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE ExplicitForAll #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE PolyKinds #-}
-{-# LANGUAGE AllowAmbiguousTypes #-}
-{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE ExplicitForAll #-}
+{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 
-module Standalone where
+module Example where
 
 -- AST
 import GHC.TypeLits
@@ -36,6 +36,7 @@ import LLVM.AST.Tagged.Global
 import LLVM.AST.Tagged.Constant
 import LLVM.AST.Tagged.Tag
 import LLVM.AST.TypeLevel.Type
+
 import qualified LLVM.AST as AST
 import qualified LLVM.AST.Global as AST
 
@@ -49,10 +50,12 @@ type ArgTys = [(IntegerType' 32), (IntegerType' 32)]
 type RetTy = IntegerType' 32
 
 defAdd :: Global
-defAdd = function nm (params, False) [body]
+defAdd = function nm (params, False) [body, body]
   where
     nm :: Name ::: (PointerType' (FunctionType' (IntegerType' 32) ArgTys) ('AddrSpace' 0))
     nm = named "add"
+
+    -- Types of subexpression are inferred from toplevel LLVM function signature
 
     {-p1 :: Parameter ::: (IntegerType' 32)-}
     p1 = parameter (named "a") []
@@ -60,7 +63,7 @@ defAdd = function nm (params, False) [body]
     {-p2 :: Parameter ::: (IntegerType' 32)-}
     p2 = parameter (named "b") []
 
-    body :: BasicBlock ::: IntegerType' 32
+    {-body :: BasicBlock ::: IntegerType' 32-}
     body = basicBlock "entry" [] (ret (constantOperand c0) [])
 
     {-params :: Parameter :::* ArgTys-}
