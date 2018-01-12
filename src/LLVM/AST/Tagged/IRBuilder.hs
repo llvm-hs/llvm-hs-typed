@@ -309,72 +309,72 @@ xor
 xor a b = IR.or (coerce a) (coerce b) >>= pure . coerce
 
 sext
-  :: forall width1 width2. (Known width2, width1 <= width2)
-  => forall m. IR.MonadIRBuilder m
+  :: forall width1 width2 m. (Known width2, width1 <= width2)
+  => IR.MonadIRBuilder m
   => (Operand ::: (IntegerType' width1))
   -> m (Operand ::: (IntegerType' width2))
 sext a = IR.sext (coerce a) (val @_ @(IntegerType' width2)) >>= pure . coerce
 
 zext
-  :: forall width1 width2. (Known width2, width1 <= width2)
-  => forall m. IR.MonadIRBuilder m
+  :: forall width1 width2 m. (Known width2, width1 <= width2)
+  => IR.MonadIRBuilder m
   => (Operand ::: (IntegerType' width1))
   -> m (Operand ::: (IntegerType' width2))
 zext a = IR.zext (coerce a) (val @_ @(IntegerType' width2)) >>= pure . coerce
 
 fptoui
-  :: forall fpt width. Known width
-  => forall m. IR.MonadIRBuilder m
+  :: forall fpt width m. Known width
+  => IR.MonadIRBuilder m
   => (Operand ::: (FloatingPointType' fpt))
   -> m (Operand ::: (IntegerType' width))
 fptoui a = IR.fptoui (coerce a) (val @_ @(IntegerType' width)) >>= pure . coerce
 
 fptosi
-  :: forall fpt width. Known width
-  => forall m. IR.MonadIRBuilder m
+  :: forall fpt width m. Known width
+  => IR.MonadIRBuilder m
   => (Operand ::: (FloatingPointType' fpt))
   -> m (Operand ::: (IntegerType' width))
 fptosi a = IR.fptosi (coerce a) (val @_ @(IntegerType' width)) >>= pure . coerce
 
 uitofp
-  :: forall fpt width. Known width
-  => forall m. IR.MonadIRBuilder m
+  :: forall fpt width m. Known width
+  => IR.MonadIRBuilder m
   => (Operand ::: (FloatingPointType' fpt))
   -> m (Operand ::: (IntegerType' width))
 uitofp a = IR.uitofp (coerce a) (val @_ @(IntegerType' width)) >>= pure . coerce
 
 sitofp
-  :: forall fpt width. Known width
-  => forall m. IR.MonadIRBuilder m
+  :: forall fpt width m. Known width
+  => IR.MonadIRBuilder m
   => (Operand ::: (FloatingPointType' fpt))
   -> m (Operand ::: (IntegerType' width))
 sitofp a = IR.sitofp (coerce a) (val @_ @(IntegerType' width)) >>= pure . coerce
 
 trunc
-  :: forall width1 width2. (Known width2, width1 <= width2)
-  => forall m. IR.MonadIRBuilder m
+  :: forall width1 width2 m. (Known width2, width1 <= width2)
+  => IR.MonadIRBuilder m
   => (Operand ::: (IntegerType' width1))
   -> m (Operand ::: (IntegerType' width2))
 trunc a = IR.trunc (coerce a) (val @_ @(IntegerType' width2)) >>= pure . coerce
 
 ptrtoint
-  :: forall width t as. (Known width)
-  => forall m. IR.MonadIRBuilder m
+  :: forall width t as m. (Known width)
+  => IR.MonadIRBuilder m
   => (Operand ::: PointerType' t as)
   -> m (Operand ::: IntegerType' width)
 ptrtoint a = IR.ptrtoint (coerce a) (val @_ @(IntegerType' width)) >>= pure . coerce
 
 inttoptr
-  :: forall width t as. (Known width)
-  => forall m. IR.MonadIRBuilder m
+  :: forall width t as m. (Known width)
+  => IR.MonadIRBuilder m
   => (Operand ::: IntegerType' width)
   -> m (Operand ::: PointerType' t as)
 inttoptr a = IR.inttoptr (coerce a) (val @_ @(IntegerType' width)) >>= pure . coerce
 
 fptrunc :: forall fpt1 fpt2 m.
-    (Known fpt2, BitSizeOfFP fpt2 <= BitSizeOfFP fpt1, IR.MonadIRBuilder m)
-    => Operand ::: FloatingPointType' fpt1
-    -> m (Operand ::: FloatingPointType' fpt2)
+  (Known fpt2, BitSizeOfFP fpt2 <= BitSizeOfFP fpt1, IR.MonadIRBuilder m)
+  => Operand ::: FloatingPointType' fpt1
+  -> m (Operand ::: FloatingPointType' fpt2)
 fptrunc a = IR.fptrunc (coerce a) (val @_ @(FloatingPointType' fpt2)) >>= pure . coerce
 
 fpext :: forall fpt1 fpt2 m. Known fpt2 =>

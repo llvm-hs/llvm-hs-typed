@@ -48,7 +48,7 @@ defAdd = function nm (params, False) [body, body]
     p2 = parameter (named "b") []
 
     {-body :: BasicBlock ::: IntegerType' 32-}
-    body = basicBlock "entry" [] ((ret (constantOperand c0) []))
+    body = basicBlock "entry" [] (ret (constantOperand c0) [])
 
     {-params :: Parameter :::* ArgTys-}
     params = p1 :* p2 :* tnil
