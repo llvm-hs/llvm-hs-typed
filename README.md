@@ -80,7 +80,7 @@ module_ = defaultModule
 
 **Typed IRBuilder**
 
-```
+```haskell
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE RecursiveDo #-}
