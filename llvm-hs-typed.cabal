@@ -2,7 +2,7 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 name:                llvm-hs-typed
-version:             4.0.0.0
+version:             5.0.0.0
 synopsis:            LLVM AST with type-level tracking of LLVM types
 description:
  llvm-hs-typed provides a type-safe way of producin LLVM IR

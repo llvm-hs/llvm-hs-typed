@@ -2,8 +2,6 @@
 
 This module provides a type-safe variant of "LLVM.IRBuilder" interface.
 
-Example 1:
-
 -}
 
 {-# LANGUAGE DataKinds #-}
@@ -459,7 +457,7 @@ gep address indices = IR.gep (coerce address) args >>= pure . coerce
     args = fmap ConstantOperand (getGEPArgs indices)
 
 insertElement
-  :: forall n t width m.  IR.MonadIRBuilder m
+  :: forall n t width m. IR.MonadIRBuilder m
   => Operand ::: VectorType' n t
   -> Operand ::: t
   -> Operand ::: IntegerType' width
@@ -467,14 +465,14 @@ insertElement
 insertElement a b c = IR.insertElement (coerce a) (coerce b) (coerce c) >>= pure . coerce
 
 extractElement
-  :: forall n t width m.  IR.MonadIRBuilder m
+  :: forall n t width m. IR.MonadIRBuilder m
   => Operand ::: VectorType' n t
   -> Operand ::: IntegerType' width
   -> m (Operand ::: t)
 extractElement v i = IR.extractElement (coerce v) (coerce i) >>= pure . coerce
 
 shuffleVector
-  :: forall n l t width m.  IR.MonadIRBuilder m
+  :: forall n l t width m. IR.MonadIRBuilder m
   => Operand ::: VectorType' n t
   -> Operand ::: VectorType' n t
   -> Constant ::: VectorType' l (IntegerType' 32)
@@ -488,7 +486,7 @@ extractValue
   -> m (Operand ::: ValueAt t idxs)
 extractValue c = IR.extractValue (coerce c) (map fromIntegral (val @_ @idxs) :: [Word32]) >>= pure . coerce
 
-insertValue :: forall t (idxs :: [Nat])m .
+insertValue :: forall t (idxs :: [Nat]) m.
   (Known idxs, NotNull idxs, IR.MonadIRBuilder  m)
   => Operand ::: t
   -> Operand ::: ValueAt t idxs
