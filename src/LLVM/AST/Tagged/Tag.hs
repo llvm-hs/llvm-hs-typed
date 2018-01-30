@@ -6,6 +6,7 @@
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeSynonymInstances #-}
 
 module LLVM.AST.Tagged.Tag where
 
@@ -13,6 +14,7 @@ import GHC.TypeLits
 import Data.Coerce
 
 import LLVM.AST.TypeLevel.Type
+import LLVM.Pretty
 
 -- | A value of type @v ::: t@ denotes a value of type @v@ with an LLVM type
 -- annotation of @t :: Type'@.
@@ -60,3 +62,9 @@ infixr 5 :×
 unCounted :: n × a -> [a]
 unCounted VNil = []
 unCounted (x :× xs) = x : unCounted xs
+
+instance (PP a) => PP (a :::: t) where
+  pp (Typed v) = pp v
+
+instance (PP a) => PP (a ::: t) where
+  pp (Typed v) = pp v

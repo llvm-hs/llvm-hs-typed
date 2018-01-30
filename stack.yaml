@@ -7,5 +7,10 @@ packages:
   extra-dep: true
   subdirs:
     - 'llvm-hs-pure'
+- location:
+    git: https://github.com/llvm-hs/llvm-hs-pretty.git
+    commit: 57bd441770996642e224427455df2e302c988a9c
+  extra-dep: true
+
 extra-deps:
 - encode-string-0.1.0.0
