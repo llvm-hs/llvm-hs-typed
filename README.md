@@ -11,7 +11,7 @@ to prevent malformed ASTs.
 Usage
 -----
 
-**Typed AST**
+### Typed AST
 
 ```haskell
 {-# LANGUAGE DataKinds #-}
@@ -78,7 +78,7 @@ module_ = defaultModule
   }
 ```
 
-**Typed IRBuilder**
+### Typed IRBuilder
 
 ```haskell
 {-# LANGUAGE DataKinds #-}
