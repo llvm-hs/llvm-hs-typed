@@ -7,6 +7,8 @@
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module LLVM.AST.Tagged.Tag where
 
@@ -14,6 +16,7 @@ import GHC.TypeLits
 import Data.Coerce
 
 import LLVM.AST.TypeLevel.Type
+import LLVM.AST.Type (Type)
 import LLVM.Pretty
 
 -- | A value of type @v ::: t@ denotes a value of type @v@ with an LLVM type
@@ -36,6 +39,11 @@ assertLLVMType = Typed
 -- | Removes the LLVM type annotation.
 unTyped :: v :::: t -> v
 unTyped (Typed v) = v
+
+
+-- | Removes the LLVM type annotation.
+typeOf :: forall (t :: Type') v. Known t => (v ::: t) -> Type
+typeOf (Typed v) = (val @_ @t)
 
 -- | A list of tagged values. The smart constructors below ensure
 -- that the type-level list has the same lengths as the value list,
