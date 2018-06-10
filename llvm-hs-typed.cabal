@@ -57,6 +57,7 @@ library
     llvm-hs-pure    == 5.1.*,
     llvm-hs-pretty  >= 0.2,
     bytestring      >= 0.10 && < 0.11,
-    encode-string   == 0.1.*
+    encode-string   == 0.1.*,
+    hvect           == 0.4.*
   hs-source-dirs:      src
   default-language:    Haskell2010

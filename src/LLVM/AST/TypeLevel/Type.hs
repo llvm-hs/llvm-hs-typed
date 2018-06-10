@@ -36,10 +36,13 @@ import qualified Data.ByteString.Short as BS
 import LLVM.AST.Type
 import LLVM.AST.AddrSpace
 import LLVM.AST.Name
+import qualified LLVM.IRBuilder as IR
 
 data Name' = Name' Symbol | UnName' Nat
 
 data AddrSpace' = AddrSpace' Nat
+
+data ParameterName' = ParameterName' Symbol
 
 -- | A copy of 'Type', suitable to be used on the type level
 data Type'
@@ -103,6 +106,8 @@ type instance Value FloatingPointType = FloatingPointType
 type instance Value Bool = Bool
 type instance Value Symbol = String
 type instance Value Nat = Integer
+type instance Value ParameterName' = IR.ParameterName
+type instance Value (a, b) = (Value a, Value b)
 
 word32Val :: forall (n::Nat). Known n => Word32
 word32Val = fromIntegral (val @_ @n)
@@ -153,6 +158,11 @@ instance Known s => Known ('Name' s) where
     val = Name (byteStringVal @s)
 instance Known n => Known (UnName' n) where
     val = UnName (wordVal @n)
+instance Known s => Known ('ParameterName' s) where
+    val = IR.ParameterName (byteStringVal @s)
+
+instance (Known a, Known b) => Known '(a, b) where
+    val = (val @_ @a, val @_ @b)
 
 instance Known HalfFP      where val = HalfFP
 instance Known FloatFP     where val = FloatFP
