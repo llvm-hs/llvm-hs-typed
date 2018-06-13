@@ -111,6 +111,8 @@ import qualified LLVM.AST.FloatingPointPredicate as FP
 import GHC.TypeLits
 import GHC.Exts (Constraint)
 import Data.Coerce
+import Unsafe.Coerce
+import Data.HVect hiding (Nat)
 import qualified LLVM.IRBuilder as IR
 
 -------------------------------------------------------------------------------
@@ -144,13 +146,20 @@ freshUnName = IR.freshUnName >>= pure . coerce
 named :: IR.MonadIRBuilder m => m (r ::: t) -> ShortByteString -> m (r ::: t)
 named m = IR.named m
 
+-- partially applied Map
+type family MapOp (as :: [(Type', ParameterName')]) where
+   MapOp '[] = '[]
+   MapOp ('(t, _) ': xs) = (Operand :::: t) ': MapOp xs
+
 function
-  :: forall (t :: Type') m. (Known t, IR.MonadModuleBuilder m)
+  :: forall (t :: Type') -- ^ Function return type
+            (as :: [(Type', ParameterName')]) -- ^ Function arguments
+            m.
+     (Known t, Known as, IR.MonadModuleBuilder m)
   => Name                              -- ^ Function name
-  -> [(Type, IR.ParameterName)]        -- ^ Parameter types and name suggestions
-  -> ([Operand] -> IR.IRBuilderT m ()) -- ^ Function body builder
+  -> (HVect (MapOp as) -> IR.IRBuilderT m ()) -- ^ Function body builder
   -> m (Operand ::: t)
-function nm params m = IR.function nm params (val @_ @t) m >>= pure . coerce
+function nm m = IR.function nm (val @_ @as) (val @_ @t) (unsafeCoerce m) >>= pure . coerce
 
 -------------------------------------------------------------------------------
 -- Types

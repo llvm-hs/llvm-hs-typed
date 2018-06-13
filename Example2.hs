@@ -3,6 +3,8 @@
 {-# LANGUAGE RecursiveDo #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE TypeFamilies #-}
 
 module Example2 where
 
@@ -20,7 +22,7 @@ import qualified LLVM.AST.Tagged as AST
 import LLVM.AST.Tagged.IRBuilder as TBuilder
 import qualified LLVM.IRBuilder as Builder
 
-import Data.Coerce
+import Data.HVect
 
 simple :: AST.Module
 simple = Builder.buildModule "exampleModule" $ do
@@ -28,7 +30,7 @@ simple = Builder.buildModule "exampleModule" $ do
   where
   func :: Builder.ModuleBuilder (AST.Operand ::: IntegerType' 32)
   func =
-    TBuilder.function "add" [(AST.i32, "a"), (AST.i32, "b")] $ \[a, b] -> do
+    TBuilder.function @(IntegerType' 32) @'[ '(IntegerType' 32, 'ParameterName' "a"), '(IntegerType' 32, 'ParameterName' "b")] "add" $ \(a :&: b :&: HNil) -> do
       entry <- block `named` "entry"; do
-        c <- add (coerce a) (coerce b)
+        c <- add a b
         ret c
